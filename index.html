@@ -1,67 +1,165 @@
-<!DOCTYPE html>
-<html lang="es">
+<!doctype html>
+<html lang="es-MX">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BrickArt Studio | Generador de Mosaicos Reales</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bloquitos · Mosaicos de bloques</title>
+  <meta name="description" content="Sube una foto, mira cómo queda como mosaico de bloques y pide tu kit con instrucciones numeradas.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div class="app-layout">
-        <aside class="sidebar">
-            <header>
-                <h1>BrickArt <span>Pro</span></h1>
-                <p>Convierte fotos en planos de construcción.</p>
-            </header>
+  <div class="app" id="app">
+    <header class="topbar">
+      <a class="brand" href="./">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="brand-name" data-store-name>Bloquitos</span>
+      </a>
+      <nav class="steps" id="steps" aria-label="Pasos">
+        <button type="button" data-step="1"><span>1</span>Foto</button>
+        <button type="button" data-step="2"><span>2</span>Diseño</button>
+        <button type="button" data-step="3"><span>3</span>Colores</button>
+        <button type="button" data-step="4"><span>4</span>Pedido</button>
+        <button type="button" data-step="5"><span>5</span>Instrucciones</button>
+      </nav>
+      <div class="price-pill" id="pricePill" hidden></div>
+    </header>
 
-            <div class="controls">
-                <label class="upload-area">
-                    <span>📁 Subir Imagen</span>
-                    <input type="file" id="imageInput" accept="image/*" hidden>
-                </label>
+    <main class="layout">
+      <section class="stage" aria-label="Vista previa">
+        <div class="stage-frame" id="dropZone">
+          <canvas id="stageCanvas" hidden></canvas>
+          <div class="empty" id="emptyState">
+            <div class="empty-art" aria-hidden="true"></div>
+            <h1>Tu foto, hecha de bloquitos</h1>
+            <p>Sube una imagen o arrástrala aquí para ver cómo queda como mosaico.</p>
+            <label class="btn btn-primary">
+              <input type="file" accept="image/*" data-file hidden>Subir foto
+            </label>
+          </div>
+          <div class="drop-hint" aria-hidden="true">Suelta tu imagen aquí</div>
+        </div>
+        <div class="stage-bar" id="stageBar" hidden>
+          <div class="stage-meta" id="stageMeta"></div>
+          <div class="seg" role="group" aria-label="Vista">
+            <button type="button" data-view="mosaic" aria-pressed="true">Mosaico</button>
+            <button type="button" data-view="original" aria-pressed="false">Original</button>
+          </div>
+          <label class="toggle"><input type="checkbox" id="plateGrid"><span>Placas</span></label>
+        </div>
+      </section>
 
-                <div class="control-group">
-                    <label>Resolución (Studs)</label>
-                    <select id="gridSize">
-                        <option value="16">16 x 16 (Small)</option>
-                        <option value="32" selected>32 x 32 (Medium)</option>
-                        <option value="48">48 x 48 (Large)</option>
-                        <option value="64">64 x 64 (XL)</option>
-                    </select>
-                </div>
+      <aside class="panel">
+        <!-- 1 · Foto -->
+        <section class="step-panel" data-panel="1">
+          <h2>Sube tu foto</h2>
+          <p class="muted">Funcionan mejor los retratos con buena luz y fondo sencillo. Después puedes recortar y ajustar.</p>
+          <label class="upload">
+            <input type="file" accept="image/*" data-file hidden>
+            <span class="upload-icon" aria-hidden="true">＋</span>
+            <span><b>Elegir imagen</b><br><small>JPG, PNG o WebP · o arrástrala a la vista previa</small></span>
+          </label>
+          <button type="button" class="btn btn-ghost" id="sampleBtn">Probar con una imagen de ejemplo</button>
+          <div class="how">
+            <h3>¿Cómo funciona?</h3>
+            <ol>
+              <li><b>Diseña</b> el tamaño y el encuadre.</li>
+              <li><b>Revisa los colores</b>: checamos el inventario del proveedor en vivo y te sugerimos cambios si falta alguno.</li>
+              <li><b>Pide tu kit</b>: piezas, placas base e instrucciones numeradas.</li>
+            </ol>
+          </div>
+        </section>
 
-                <div class="control-group">
-                    <h3>Ajustes de Imagen</h3>
-                    <label>Brillo</label>
-                    <input type="range" id="brightness" min="-50" max="50" value="0">
-                    <label>Contraste</label>
-                    <input type="range" id="contrast" min="-50" max="50" value="0">
-                </div>
+        <!-- 2 · Diseño -->
+        <section class="step-panel" data-panel="2" hidden>
+          <h2>Diseña tu mosaico</h2>
+          <h3>Tamaño</h3>
+          <div class="sizes" id="sizes" role="radiogroup" aria-label="Tamaño"></div>
 
-                <div class="control-group">
-                    <div class="toggle-control">
-                        <input type="checkbox" id="buildMode">
-                        <label for="buildMode">Activar Build Mode (IDs)</label>
-                    </div>
-                </div>
+          <h3>Encuadre</h3>
+          <div class="sliders">
+            <label>Zoom <input type="range" min="1" max="3" step="0.01" value="1" data-crop="zoom"></label>
+            <label>Horizontal <input type="range" min="-1" max="1" step="0.01" value="0" data-crop="x"></label>
+            <label>Vertical <input type="range" min="-1" max="1" step="0.01" value="0" data-crop="y"></label>
+          </div>
 
-                <button id="generateBtn" class="btn-primary">Generar Mosaico</button>
-                <button id="downloadBtn" class="btn-secondary" disabled>Exportar PNG</button>
+          <h3>Ajustes</h3>
+          <div class="sliders">
+            <label>Brillo <input type="range" min="-60" max="60" value="0" data-adj="brightness"></label>
+            <label>Contraste <input type="range" min="-60" max="60" value="0" data-adj="contrast"></label>
+            <label>Saturación <input type="range" min="-100" max="80" value="0" data-adj="saturation"></label>
+          </div>
+          <label class="toggle"><input type="checkbox" id="dither"><span>Difuminado (más detalle en degradados)</span></label>
+          <button type="button" class="btn btn-ghost btn-sm" id="resetAdj">Restablecer ajustes</button>
+
+          <details class="palette-box">
+            <summary>Colores del catálogo <span class="muted" id="paletteCount"></span></summary>
+            <p class="muted small">Solo usamos colores que vende el proveedor. Toca uno para excluirlo del mosaico.</p>
+            <div class="palette" id="palette"></div>
+          </details>
+
+          <div class="actions"><button type="button" class="btn btn-primary" data-goto="3">Revisar colores →</button></div>
+        </section>
+
+        <!-- 3 · Colores / inventario -->
+        <section class="step-panel" data-panel="3" hidden>
+          <h2>Colores e inventario</h2>
+          <div class="live" id="liveStatus"><span class="dot"></span><span>Consultando inventario…</span></div>
+          <div id="issues"></div>
+          <h3>Colores de tu mosaico</h3>
+          <div class="color-table" id="colorTable"></div>
+          <div class="actions"><button type="button" class="btn btn-primary" id="toOrder" data-goto="4">Continuar al pedido →</button></div>
+        </section>
+
+        <!-- 4 · Pedido -->
+        <section class="step-panel" data-panel="4" hidden>
+          <h2>Tu pedido</h2>
+          <div id="orderSummary"></div>
+          <form id="orderForm" class="form" novalidate>
+            <h3>Envío</h3>
+            <label>Nombre completo<input name="nombre" autocomplete="name" required></label>
+            <div class="row2">
+              <label>Correo<input name="email" type="email" autocomplete="email" required></label>
+              <label>Teléfono<input name="telefono" type="tel" autocomplete="tel" required></label>
             </div>
-        </aside>
-
-        <main class="viewport">
-            <div id="canvasContainer" class="canvas-container">
-                <canvas id="mainCanvas"></canvas>
+            <label>Calle y número<input name="calle" autocomplete="address-line1" required></label>
+            <div class="row2">
+              <label>Colonia<input name="colonia" autocomplete="address-line2" required></label>
+              <label>C.P.<input name="cp" inputmode="numeric" pattern="\d{5}" autocomplete="postal-code" required></label>
             </div>
+            <div class="row2">
+              <label>Ciudad<input name="ciudad" autocomplete="address-level2" required></label>
+              <label>Estado<input name="estado" autocomplete="address-level1" required></label>
+            </div>
+            <p class="form-error" id="formError" hidden></p>
+            <button type="submit" class="btn btn-primary btn-block">Confirmar pedido</button>
+          </form>
+          <div id="orderDone" hidden></div>
+          <div id="adminBox" hidden></div>
+        </section>
 
-            <section id="inventory" class="inventory hidden">
-                <h2>Lista de Piezas (Inventory)</h2>
-                <div id="pieceList" class="piece-list"></div>
-                <div class="total-summary">Total de piezas: <span id="totalCount">0</span></div>
-            </section>
-        </main>
-    </div>
-    <script type="module" src="script.js"></script>
+        <!-- 5 · Instrucciones -->
+        <section class="step-panel" data-panel="5" hidden>
+          <h2>Instrucciones de armado</h2>
+          <p class="muted">Cada color tiene un número. Elige una placa para ver qué número va en cada cuadrito.</p>
+          <div class="plate-nav">
+            <button type="button" class="btn btn-ghost btn-sm" id="prevPlate" aria-label="Placa anterior">←</button>
+            <strong id="plateLabel">A1</strong>
+            <button type="button" class="btn btn-ghost btn-sm" id="nextPlate" aria-label="Placa siguiente">→</button>
+          </div>
+          <div class="plate-map" id="plateMap"></div>
+          <h3>Piezas de esta placa</h3>
+          <ol class="legend" id="plateLegend"></ol>
+          <div class="actions"><button type="button" class="btn btn-primary" id="printBtn">Imprimir o guardar PDF</button></div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <div id="printArea" class="print-area"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>
